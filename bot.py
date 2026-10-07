@@ -122,12 +122,12 @@ async def main():
 
     scalper = UltraProScalperV5(symbol="XAUUSDm", lot_size=0.01)
     
-    send_telegram_alert("🚀 *XAUUSDm 5-Min Scalper Bot Started!* (Har 5 minute me update milega)")
+    send_telegram_alert("🚀 *XAUUSDm 1-Min Scalper Bot Started!* (Har 1 minute me update milega)")
 
-    # Har 5 minute (300 seconds) me update bhejne ka loop (Total 12 iterations = 1 ghanta)
-    for _ in range(12):
+    for _ in range(10):
         await scalper.analyze_and_trade(connection)
-        await asyncio.sleep(300)
+        await asyncio.sleep(60)
 
 if __name__ == "__main__":
     asyncio.run(main())
+                
