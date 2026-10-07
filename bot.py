@@ -21,7 +21,11 @@ def send_telegram_alert(message: str):
             return
         url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
         payload = {"chat_id": TELEGRAM_CHAT_ID, "text": message, "parse_mode": "Markdown"}
-        requests.post(url, json=payload)
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
+            logging.info("Telegram message sent successfully!")
+        else:
+            logging.error(f"Failed to send telegram message: {response.text}")
     except Exception as e:
         logging.error(f"Telegram error: {e}")
 
@@ -72,4 +76,13 @@ class UltraProScalperV5:
 
 if __name__ == "__main__":
     logging.info("Ultra Pro Scalper V5 Initialized on GitHub.")
-    send_telegram_alert("🟢 *Ultra Pro Scalper V5* bot successfully start ho gaya hai aur GitHub Actions par run kar raha hai!")
+    
+    # Ye line turant Telegram par confirmation message bhej degi
+    send_telegram_alert("🟢 *Ultra Pro Scalper V5* bot successfully start ho gaya hai aur GitHub Actions par run ho raha hai!")
+    
+    # Scalper initialize aur evaluation check
+    scalper = UltraProScalperV5()
+    dummy_signal = scalper.evaluate(2030.50, 2030.70)
+    if dummy_signal:
+        send_telegram_alert(f"🚨 Signal Mila: {dummy_signal['action']}")
+        
