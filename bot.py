@@ -3,17 +3,16 @@ import time
 import logging
 import asyncio
 import numpy as np
+import pandas as pd
+import yfinance as yf
 import requests
-from metaapi_cloud_sdk import MetaApi
 
 # Logging setup
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Configurations
+# Configurations (Telegram tokens aapke GitHub Secrets me hone chahiye)
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
 TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID')
-METAAPI_TOKEN = os.environ.get('METAAPI_TOKEN')
-ACCOUNT_ID = os.environ.get('ACCOUNT_ID')
 
 def send_telegram_alert(message: str):
     try:
@@ -60,35 +59,32 @@ def calculate_rsi(prices, period=14):
             rsi[i] = 100. - 100. / (1. + rs)
     return rsi
 
-class UltraProScalperV5:
-    def __init__(self, symbol="XAUUSDm", lot_size=0.01):
+class FreeScalperBot:
+    def __init__(self, symbol="GC=F"): # GC=F is Gold / XAUUSD equivalent
         self.symbol = symbol
-        self.lot_size = lot_size
 
-    async def analyze_and_trade(self, connection):
+    def analyze_market(self):
         try:
-            candles = await connection.get_candles(self.symbol, '1m', 50)
-            if not candles or len(candles) < 30:
-                logging.error("Candle data kam mila hai analysis ke liye.")
+            # Yahoo Finance se 1-minute ka data fetch karna (100% Free)
+            data = yf.download(tickers=self.symbol, period="1d", interval="1m", progress=False)
+            if data.empty or len(data) < 30:
+                logging.error("Data kam mila hai analysis ke liye.")
                 return
 
-            closes = np.array([c['close'] for c in candles])
-            
+            closes = data['Close'].values.flatten()
+            current_close = float(closes[-1])
+
             ema_fast = calculate_ema(closes, 9)
             ema_slow = calculate_ema(closes, 21)
             rsi = calculate_rsi(closes, 14)
 
-            current_close = closes[-1]
-            current_rsi = rsi[-1]
-            current_ema_fast = ema_fast[-1]
-            current_ema_slow = ema_slow[-1]
+            current_rsi = float(rsi[-1])
+            current_ema_fast = float(ema_fast[-1])
+            current_ema_slow = float(ema_slow[-1])
 
-            price = await connection.get_symbol_price(self.symbol)
-            bid, ask = price['bid'], price['ask']
-
-            signal_msg = f"⚡ *Ultra Pro Scalper V5 [XAUUSDm]*\n\n" \
-                         f"Symbol: `{self.symbol}`\n" \
-                         f"Bid/Ask: `{bid}` / `{ask}`\n" \
+            signal_msg = f"⚡ *Ultra Pro Scalper V5 [Free Mode]*\n\n" \
+                         f"Symbol: `XAUUSD`\n" \
+                         f"Price: `{current_close:.2f}`\n" \
                          f"RSI (14): `{current_rsi:.2f}`\n" \
                          f"EMA (9/21): `{current_ema_fast:.2f}` / `{current_ema_slow:.2f}`\n"
 
@@ -105,29 +101,14 @@ class UltraProScalperV5:
             logging.error(f"Error during analysis: {e}")
 
 async def main():
-    if not METAAPI_TOKEN or not ACCOUNT_ID:
-        logging.error("MetaApi Token ya Account ID missing hai!")
-        return
+    bot = FreeScalperBot(symbol="GC=F")
+    send_telegram_alert("🚀 *Free Scalper Bot Started!* (XAUUSD Live Updates)")
 
-    metaapi = MetaApi(METAAPI_TOKEN)
-    account = await metaapi.metatrader_account_api.get_account(ACCOUNT_ID)
-    
-    if account.state != 'DEPLOYED':
-        logging.info("Deploying MT5 account...")
-        await account.deploy()
-        
-    await account.wait_connected()
-    connection = account.get_rpc_connection()
-    await connection.connect()
-
-    scalper = UltraProScalperV5(symbol="XAUUSDm", lot_size=0.01)
-    
-    send_telegram_alert("🚀 *XAUUSDm 1-Min Scalper Bot Started!* (Har 1 minute me update milega)")
-
-    for _ in range(10):
-        await scalper.analyze_and_trade(connection)
-        await asyncio.sleep(60)
+    # Har 5 minute (300 seconds) me update bhejne ka loop
+    for _ in range(12):
+        bot.analyze_market()
+        await asyncio.sleep(300)
 
 if __name__ == "__main__":
     asyncio.run(main())
-                
+    
