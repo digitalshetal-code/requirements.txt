@@ -2,8 +2,8 @@ name: Run Ultra Pro Scalper V5
 
 on:
   schedule:
-    - cron: '*/15 * * * *' # Har 15 minute me bot apne aap run hoga
-  workflow_dispatch: # Aap chahe toh button dabar bhi manually chala sakte hain
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
 
 jobs:
   run-bot:
@@ -22,5 +22,9 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run Bot
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          METAAPI_TOKEN: ${{ secrets.METAAPI_TOKEN }}
         run: |
           python bot.py
