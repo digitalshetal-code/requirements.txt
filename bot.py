@@ -1,3 +1,4 @@
+import os
 import time
 import logging
 import numpy as np
@@ -7,14 +8,17 @@ from metaapi_cloud_sdk import MetaApi
 # Logging setup
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Configurations (Apni details yahan update kar sakte hain)
-TELEGRAM_BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
-TELEGRAM_CHAT_ID = "YOUR_CHAT_ID"
-METAAPI_TOKEN = "YOUR_METAAPI_TOKEN"
-ACCOUNT_ID = "YOUR_MT5_ACCOUNT_ID"
+# Configurations (GitHub Secrets se values automatically fetch hongi)
+TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
+TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID')
+METAAPI_TOKEN = os.environ.get('METAAPI_TOKEN')
+ACCOUNT_ID = os.environ.get('ACCOUNT_ID', 'YOUR_MT5_ACCOUNT_ID')
 
 def send_telegram_alert(message: str):
     try:
+        if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+            logging.error("Telegram credentials missing!")
+            return
         url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
         payload = {"chat_id": TELEGRAM_CHAT_ID, "text": message, "parse_mode": "Markdown"}
         requests.post(url, json=payload)
@@ -57,6 +61,9 @@ class UltraProScalperV5:
         ema_val = self.calculate_ema(self.prices, 14)
         rsi_val = self.calculate_rsi(self.prices, 14)
 
+        if ema_val is None or rsi_val is None:
+            return None
+
         if current_bid > ema_val and rsi_val < 45:
             return {"action": "BUY", "sl": current_bid - (self.sl_pips * 0.1), "tp": current_bid + (self.tp_pips * 0.1)}
         elif current_bid < ema_val and rsi_val > 55:
@@ -65,5 +72,4 @@ class UltraProScalperV5:
 
 if __name__ == "__main__":
     logging.info("Ultra Pro Scalper V5 Initialized on GitHub.")
-    send_telegram_alert("🟢 *Ultra Pro Scalper V5* repository loaded successfully!")
-      
+    send_telegram_alert("🟢 *Ultra Pro Scalper V5* bot successfully start ho gaya hai aur GitHub Actions par run kar raha hai!")
