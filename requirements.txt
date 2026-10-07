@@ -1,6 +1,4 @@
-fastapi
-uvicorn
-metaapi-cloud-sdk
-numpy
 requests
-pydantic
+numpy
+pandas
+yfinance
