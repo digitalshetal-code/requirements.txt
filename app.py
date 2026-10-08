@@ -3,7 +3,6 @@ import streamlit.components.v1 as components
 import yfinance as yf
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 
 st.set_page_config(page_title="XAUUSD SMC Institutional Dashboard", layout="wide")
 
@@ -40,17 +39,21 @@ def load_data():
 df = load_data()
 
 if not df.empty:
+    # Stable Trend Filter using 20 EMA instead of just last candle
+    df['EMA'] = df['Close'].ewm(span=20, adjust=False).mean()
+    
     close_price = float(df['Close'].iloc[-1])
     prev_close = float(df['Close'].iloc[-2])
+    ema_value = float(df['EMA'].iloc[-1])
     
-    # EXACT SAME LOGIC AS TELEGRAM BOT FOR BUY/SELL SYNC
-    if close_price >= prev_close:
-        signal_type = "🟢 BULLISH / BUY SETUP (Bullish Order Block)"
+    # STABLE LOGIC USING EMA FILTER
+    if close_price >= ema_value:
+        signal_type = "🟢 BULLISH / BUY SETUP (Above 20 EMA)"
         entry = round(close_price - 3.0, 2)
         sl = round(entry - 12.0, 2)
         tp = round(entry + 36.0, 2)
     else:
-        signal_type = "🔴 BEARISH / SELL SETUP (Bearish Order Block)"
+        signal_type = "🔴 BEARISH / SELL SETUP (Below 20 EMA)"
         entry = round(close_price + 3.0, 2)
         sl = round(entry + 12.0, 2)
         tp = round(entry - 36.0, 2)
@@ -58,7 +61,7 @@ if not df.empty:
     # Top Metrics Display
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Live XAUUSD Price", f"${close_price:,.2f}", f"{close_price - prev_close:.2f}")
-    col2.metric("Market Bias", signal_type.split()[0] + " " + signal_type.split()[1])
+    col2.metric("Market Bias", "BULLISH" if close_price >= ema_value else "BEARISH")
     col3.metric("Active Liquidity State", "BOS / POL")
     col4.metric("Target RRR", "1:3.0")
 
@@ -73,7 +76,7 @@ if not df.empty:
     st.markdown("---")
     st.subheader("📊 XAUUSD 15M Price Action & SMC Levels")
     
-    # Clean Matplotlib Candlestick Chart
+    # Clean Matplotlib Candlestick Chart with EMA Line
     fig, ax = plt.subplots(figsize=(10, 5))
     fig.patch.set_facecolor('#0e1117')
     ax.set_facecolor('#0e1117')
@@ -91,6 +94,9 @@ if not df.empty:
     ax.bar(df_plot.index[up], df_plot['Close'][up] - df_plot['Open'][up], bottom=df_plot['Open'][up], color='#2ecc71', width=0.015, edgecolor='#2ecc71')
     ax.bar(df_plot.index[down], df_plot['Open'][down] - df_plot['Close'][down], bottom=df_plot['Close'][down], color='#e74c3c', width=0.015, edgecolor='#e74c3c')
     
+    # Plot 20 EMA line
+    ax.plot(df_plot.index, df_plot['EMA'], color='#f1c40f', linewidth=1.5, label='20 EMA Trend')
+
     # Horizontal SMC Lines
     ax.axhline(entry, color='#3498db', linestyle='--', linewidth=1.5, label=f'Entry: ${entry}')
     ax.axhline(sl, color='#e74c3c', linestyle='--', linewidth=1.5, label=f'Stop Loss: ${sl}')
