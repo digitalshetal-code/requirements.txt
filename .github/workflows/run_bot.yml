@@ -1,8 +1,8 @@
-name: Run XAUUSD SMC Bot
+name: Run XAUUSD SMC Bot All Day
 
 on:
   schedule:
-    - cron: '0 * * * *' # Har 1 ghante me automatic run hoga
+    - cron: '0 * * * *' # Poore din har 1 ghante me automatic run hoga
   workflow_dispatch: # Manual run button ke liye
 
 jobs:
@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install yfinance pandas requests matplotlib
+          pip install yfinance pandas requests matplotlib mplfinance
 
       - name: Run Telegram Bot
         env:
