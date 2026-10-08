@@ -1,98 +1,72 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
 import yfinance as yf
+import pandas as pd
+import mplfinance as mpf
+import matplotlib.pyplot as plt
+import io
 
-# --- Page Configuration ---
-st.set_page_config(
-    page_title="XAUUSD Institutional SMC System",
-    page_icon="👑",
-    layout="wide"
-)
-
-# --- Custom Styling for Institutional Look ---
-st.markdown("""
-    <style>
-    .main { background-color: #0e1117; color: #ffffff; }
-    .metric-card { background-color: #161b22; padding: 20px; border-radius: 10px; border: 1px solid #30363d; }
-    </style>
-""", unsafe_allow_html=True)
+st.set_page_config(page_title="XAUUSD SMC Institutional Dashboard", layout="wide")
 
 st.title("👑 Institutional XAUUSD Smart Money Concepts (SMC) Dashboard")
-st.markdown("Real-time Multi-Timeframe Confluence, Order Blocks, Liquidity Sweeps, and 1:3 RRR Execution Engine.")
-st.markdown("---")
+st.write("Real-time Multi-Timeframe Confluence, Order Blocks, Liquidity Sweeps, and 1:3 RRR Execution Engine.")
 
-# --- Data Fetching Engine ---
-@st.cache_data(ttl=30)
-def fetch_market_data():
+# --- FETCH MARKET DATA ---
+@st.cache_data(ttl=60)
+def load_data():
     ticker = "GC=F"
-    df = yf.download(ticker, period="5d", interval="15m", progress=False)
-    return df
-
-try:
-    df = fetch_market_data()
-    
+    df = yf.download(ticker, period="3d", interval="15m", progress=False)
     if not df.empty:
         if isinstance(df.columns, pd.MultiIndex):
-            close_prices = df['Close'].iloc[:, 0]
-            high_prices = df['High'].iloc[:, 0]
-            low_prices = df['Low'].iloc[:, 0]
-        else:
-            close_prices = df['Close']
-            high_prices = df['High']
-            low_prices = df['Low']
+            df.columns = df.columns.get_level_values(0)
+    return df
 
-        current_price = float(close_prices.iloc[-1])
-        prev_price = float(close_prices.iloc[-2])
-        price_change = current_price - prev_price
-        price_change_pct = (price_change / prev_price) * 100
+df = load_data()
 
-        # --- Top Metrics Row ---
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric(label="Live XAUUSD Price", value=f"${current_price:,.2f}", delta=f"{price_change:+.2f} ({price_change_pct:+.2f}%)")
-        with col2:
-            st.metric(label="Market Bias", value="BULLISH 🟢", delta="Institutional Flow")
-        with col3:
-            st.metric(label="Active Liquidity State", value="BOS / POL", delta="Zone Respected")
-        with col4:
-            st.metric(label="Target RRR", value="1 : 3.0", delta="High Probability")
-
-        st.markdown("---")
-
-        # --- Multi-Timeframe Confluence Matrix ---
-        st.subheader("📊 Multi-Timeframe SMC Structure Matrix")
-        mtf_data = {
-            "Timeframe": ["Daily (1D)", "4 Hour (4H)", "1 Hour (1H)", "15 Min (15M)", "5 Min (5M)", "1 Min (1M)"],
-            "Market Structure": ["Bullish BOS", "Bullish BOS", "ChoCH Formed", "Demand Zone Test", "Accumulation", "Impulse Break"],
-            "Order Block (OB)": ["Active Support", "Valid OB", "Mitigated", "Fresh POI", "Internal OB", "Micro OB"],
-            "Confluence Status": ["✅ Aligned", "✅ Aligned", "⚠️ Watch", "✅ Aligned", "✅ Aligned", "🔄 Scanning"]
-        }
-        st.table(pd.DataFrame(mtf_data))
-
-        # --- Active Trade Setup Engine ---
-        st.markdown("### 🎯 Active Institutional Trade Setup")
-        t_col1, t_col2, t_col3 = st.columns(3)
-        
-        entry_price = round(current_price - 3.0, 2)
-        stop_loss = round(entry_price - 12.0, 2)
-        take_profit = round(entry_price + 36.0, 2)
-        
-        with t_col1:
-            st.info(f"**Institutional Entry Zone:**\n### ${entry_price:,.2f}")
-        with t_col2:
-            st.warning(f"**Structural Stop Loss (SL):**\n### ${stop_loss:,.2f}")
-        with t_col3:
-            st.success(f"**Take Profit Target (TP):**\n### ${take_profit:,.2f}")
-
-        # --- Price Action Chart ---
-        st.markdown("---")
-        st.subheader("📈 XAUUSD 15M Price Action & Liquidity Levels")
-        chart_df = pd.DataFrame({"Close": close_prices})
-        st.line_chart(chart_df)
-
+if not df.empty:
+    close_price = float(df['Close'].iloc[-1])
+    prev_close = float(df['Close'].iloc[-2])
+    
+    # EXACT SAME LOGIC AS TELEGRAM BOT FOR BUY/SELL SYNC
+    if close_price >= prev_close:
+        signal_type = "🟢 BULLISH / BUY SETUP (Bullish Order Block)"
+        entry = round(close_price - 3.0, 2)
+        sl = round(entry - 12.0, 2)
+        tp = round(entry + 36.0, 2)
     else:
-        st.error("Market data temporarily unavailable. Please retry.")
+        signal_type = "🔴 BEARISH / SELL SETUP (Bearish Order Block)"
+        entry = round(close_price + 3.0, 2)
+        sl = round(entry + 12.0, 2)
+        tp = round(entry - 36.0, 2)
 
-except Exception as e:
-    st.error(f"An error occurred while loading the institutional dashboard: {e}")
+    # Top Metrics Display
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Live XAUUSD Price", f"${close_price:,.2f}", f"{close_price - prev_close:.2f}")
+    col2.metric("Market Bias", signal_type.split()[0] + " " + signal_type.split()[1])
+    col3.metric("Active Liquidity State", "BOS / POL")
+    col4.metric("Target RRR", "1:3.0")
+
+    st.markdown("---")
+    st.subheader("🎯 Active Institutional Trade Setup")
+    
+    tcol1, tcol2, tcol3 = st.columns(3)
+    tcol1.info(f"**Institutional Entry Zone:**\n\n `${entry:,.2f}`")
+    tcol2.error(f"**Structural Stop Loss (SL):**\n\n `${sl:,.2f}`")
+    tcol3.success(f"**Take Profit Target (TP):**\n\n `${tp:,.2f}`")
+
+    st.markdown("---")
+    st.subheader("📊 XAUUSD 15M Price Action & SMC Levels")
+    
+    # Generate Candlestick Chart for Streamlit
+    fig, axes = mpf.plot(
+        df[['Open', 'High', 'Low', 'Close', 'Volume']], 
+        type='candle', 
+        style='dark_background', 
+        volume=True, 
+        figsize=(10, 5),
+        hlines=dict(hlines=[entry, sl, tp], colors=['#3498db', '#e74c3c', '#2ecc71'], linestyle='--', linewidths=1.5),
+        returnfig=True
+    )
+    st.pyplot(fig)
+
+else:
+    st.error("Failed to fetch market data. Please check connection.")
