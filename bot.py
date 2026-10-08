@@ -14,7 +14,6 @@ def generate_candlestick_chart(df, entry, sl, tp):
     """Generates a professional Candlestick SMC chart with Entry, SL, and TP levels."""
     df = df[['Open', 'High', 'Low', 'Close', 'Volume']].copy()
     
-    # Custom market style
     mc = mpf.make_marketcolors(up='#2ecc71', down='#e74c3c', wick='inherit', volume='in')
     s = mpf.make_mpf_style(marketcolors=mc, facecolor='#0e1117', figcolor='#0e1117', rc={'axes.labelcolor': 'white', 'xtick.color': 'white', 'ytick.color': 'white', 'grid.color': '#30363d'})
     
@@ -65,25 +64,34 @@ def check_market_and_alert():
             df.columns = df.columns.get_level_values(0)
             
         close_price = float(df['Close'].iloc[-1])
-            
-        entry = round(close_price - 3.0, 2)
-        sl = round(entry - 12.0, 2)
-        tp = round(entry + 36.0, 2) # 1:3 RRR
+        prev_close = float(df['Close'].iloc[-2])
+        
+        # Determine Trend / Signal Type (Buy or Sell) based on recent momentum
+        if close_price >= prev_close:
+            signal_type = "🟢 **LONG / BUY SETUP (Bullish Order Block)**"
+            entry = round(close_price - 3.0, 2)
+            sl = round(entry - 12.0, 2)
+            tp = round(entry + 36.0, 2) # 1:3 RRR
+        else:
+            signal_type = "🔴 **SHORT / SELL SETUP (Bearish Order Block)**"
+            entry = round(close_price + 3.0, 2)
+            sl = round(entry + 12.0, 2)
+            tp = round(entry - 36.0, 2) # 1:3 RRR
         
         chart_buffer = generate_candlestick_chart(df, entry, sl, tp)
         
         caption = (
             f"👑 *Institutional XAUUSD SMC Dashboard* 👑\n\n"
+            f"📌 {signal_type}\n"
             f"📊 *Live Price:* `${close_price:,.2f}`\n"
-            f"🔹 *Market Structure:* Bullish BOS / Order Block\n"
             f"🎯 *Institutional Entry:* `${entry:,.2f}`\n"
             f"🛑 *Stop Loss (SL):* `${sl:,.2f}`\n"
             f"💰 *Take Profit (1:3):* `${tp:,.2f}`\n\n"
-            f"_Professional Candlestick Chart via GitHub Actions._"
+            f"_Automated hourly update via GitHub Actions._"
         )
         
         send_telegram_photo(chart_buffer, caption)
-        print("SMC Candlestick Chart and alert sent successfully to Telegram!")
+        print("SMC Candlestick Chart and Buy/Sell alert sent successfully!")
     else:
         print("Failed to fetch market data.")
 
