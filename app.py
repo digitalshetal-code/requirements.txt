@@ -26,7 +26,6 @@ st.markdown("---")
 @st.cache_data(ttl=30)
 def fetch_market_data():
     ticker = "GC=F"
-    # Fetching multi-period or high-frequency data for analysis
     df = yf.download(ticker, period="5d", interval="15m", progress=False)
     return df
 
@@ -34,7 +33,6 @@ try:
     df = fetch_market_data()
     
     if not df.empty:
-        # Handle yfinance multi-index columns if present
         if isinstance(df.columns, pd.MultiIndex):
             close_prices = df['Close'].iloc[:, 0]
             high_prices = df['High'].iloc[:, 0]
@@ -78,7 +76,7 @@ try:
         
         entry_price = round(current_price - 3.0, 2)
         stop_loss = round(entry_price - 12.0, 2)
-        take_profit = round(entry_price + 36.0, 2) # Exact 1:3 RRR
+        take_profit = round(entry_price + 36.0, 2)
         
         with t_col1:
             st.info(f"**Institutional Entry Zone:**\n### ${entry_price:,.2f}")
@@ -98,4 +96,3 @@ try:
 
 except Exception as e:
     st.error(f"An error occurred while loading the institutional dashboard: {e}")
-
