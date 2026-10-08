@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import yfinance as yf
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -8,6 +9,23 @@ st.set_page_config(page_title="XAUUSD SMC Institutional Dashboard", layout="wide
 
 st.title("👑 Institutional XAUUSD Smart Money Concepts (SMC) Dashboard")
 st.write("Real-time Multi-Timeframe Confluence, Order Blocks, Liquidity Sweeps, and 1:3 RRR Execution Engine.")
+
+# --- LIVE INDIAN STANDARD TIME (IST) CLOCK ---
+clock_html = """
+<div style="font-family: monospace; font-size: 16px; color: #2ecc71; background: #0e1117; padding: 8px; border-radius: 6px; text-align: center; border: 1px solid #30363d; margin-bottom: 15px;">
+    🕒 <b>Live Indian Standard Time (IST):</b> <span id="ist-clock">Loading...</span>
+</div>
+<script>
+function updateClock() {
+    const options = { timeZone: 'Asia/Kolkata', hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit', year: 'numeric', month: 'short', day: 'numeric' };
+    const now = new Date().toLocaleString('en-IN', options);
+    document.getElementById('ist-clock').innerText = now;
+}
+setInterval(updateClock, 1000);
+updateClock();
+</script>
+"""
+components.html(clock_html, height=55)
 
 # --- FETCH MARKET DATA ---
 @st.cache_data(ttl=60)
@@ -60,19 +78,16 @@ if not df.empty:
     fig.patch.set_facecolor('#0e1117')
     ax.set_facecolor('#0e1117')
     
-    df_plot = df.tail(100).copy() # Last 100 candles for clear view
-    df_plot['date_num'] = mdates.date2num(df_plot.index)
-    
-    width = 0.6 / 24 # Candle width
+    df_plot = df.tail(100).copy()
     
     up = df_plot['Close'] >= df_plot['Open']
     down = df_plot['Close'] < df_plot['Open']
     
-    # Wicks (High to Low)
+    # Wicks
     ax.vlines(df_plot.index[up], df_plot['Low'][up], df_plot['High'][up], color='#2ecc71', linewidth=1)
     ax.vlines(df_plot.index[down], df_plot['Low'][down], df_plot['High'][down], color='#e74c3c', linewidth=1)
     
-    # Bodies (Open to Close)
+    # Bodies
     ax.bar(df_plot.index[up], df_plot['Close'][up] - df_plot['Open'][up], bottom=df_plot['Open'][up], color='#2ecc71', width=0.015, edgecolor='#2ecc71')
     ax.bar(df_plot.index[down], df_plot['Open'][down] - df_plot['Close'][down], bottom=df_plot['Close'][down], color='#e74c3c', width=0.015, edgecolor='#e74c3c')
     
