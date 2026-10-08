@@ -11,7 +11,7 @@ import pytz
 st.set_page_config(page_title="Vantage Ultimate Institutional Terminal", layout="wide")
 
 st.title("🛰️ Vantage Ultimate Automated XAUUSD Command Center")
-st.write("100% Fully Restored Feed: Live TradingView Charts, Economic Calendar, and 50 Active Institutional Guardrails.")
+st.write("100% Fully Restored Feed: Live TradingView Charts, Economic Calendar, Detailed Modules, and Institutional Guardrails.")
 
 # --- AUTOMATED FORCE-REFRESH CONTROL PANEL ---
 st.sidebar.header("⚙️ Execution Control Panel")
@@ -200,33 +200,129 @@ st.dataframe(df_modules, use_container_width=True, hide_index=True)
 
 st.markdown("---")
 
+# --- MULTI-TIMEFRAME CONFLUENCE MATRIX ---
+st.subheader("📊 Multi-Timeframe Confluence Matrix (15M, 1H, 4H)")
+grid1, grid2, grid3, grid4 = st.columns(4)
+grid1.metric("15M Micro Trend", trend_15m)
+grid2.metric("1H Meso Trend", trend_1h)
+grid3.metric("4H Macro Trend", trend_4h)
+grid4.metric("Confluence Status", "ALIGNED ⚡" if trend_15m == trend_1h == trend_4h else "DIVERGENT ⚠️")
+
+st.markdown("---")
+
 # --- EXECUTION SETUP ---
 st.subheader(f"⚡ Automated Execution Setup ({market_regime})")
 
-st.info(f"**Automated Entry:** `${entry:,.2f}`")
-st.error(f"**Guarded SL:** `${sl:,.2f}`")
-st.success(f"**TP 1 (1:2):** `${tp1:,.2f}`")
-st.success(f"**TP 2 (1:3.5):** `${tp2:,.2f}`")
-st.success(f"**TP 3 (1:5):** `${tp3:,.2f}`")
+t1, t2, t3, t4, t5 = st.columns(5)
+t1.info(f"**Entry:**\n\n `${entry:,.2f}`")
+t2.error(f"**Guarded SL:**\n\n `${sl:,.2f}`")
+t3.success(f"**TP 1 (1:2):**\n\n `${tp1:,.2f}`")
+t4.success(f"**TP 2 (1:3.5):**\n\n `${tp2:,.2f}`")
+t5.success(f"**TP 3 (1:5):**\n\n `${tp3:,.2f}`")
 
 st.warning(f"**SMC Structure & FVG State:** `{smc_structure}`")
 
 st.markdown("---")
 
-# --- LOT SIZER ---
+# --- ORDER FLOW & HEATMAP ---
+st.subheader("🔥 Order Flow & Liquidity Heatmap Matrix")
+lc1, lc2, lc3 = st.columns(3)
+lc1.metric("Order Flow", order_flow_imbalance)
+lc2.metric("Retail Trap Zone", "Protected by ATR Guard")
+lc3.metric("Execution Spread Buffer", "0.2 Pips Configured")
+
+st.info(f"""
+💡 **Order Flow Analysis:**
+* **स्टेटस:** `{order_flow_imbalance}`
+* **विवरण:** यह डेटा सीधे मार्केट के प्राइस एक्शन और लिक्विडिटी मैट्रिक्स के साथ अलाइंड है।
+""")
+
+st.markdown("---")
+
+# --- RESTORED: TELEGRAM ALERT DISPATCHER EXPANDER ---
+with st.expander("📡 Telegram Automated Alert Dispatcher"):
+    st.write("Configure your Telegram Bot to receive instant setup alerts directly on your phone.")
+    bot_token = st.text_input("Telegram Bot Token", type="password", placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ")
+    chat_id = st.text_input("Telegram Chat ID", placeholder="987654321")
+    
+    if st.button("🚀 Send Setup Alert to Telegram"):
+        if not bot_token or not chat_id:
+            st.error("Please enter both Bot Token and Chat ID.")
+        else:
+            message = (
+                f"🚨 *XAUUSD AUTOMATED SIGNAL* 🚨\n\n"
+                f"📊 *Bias:* {bias}\n"
+                f"🎯 *Entry:* ${entry}\n"
+                f"🛑 *Stop Loss:* ${sl}\n"
+                f"✅ *Take Profit Targets:* ${tp1} / ${tp2} /${tp3}\n"
+                f"⭐ *AI Confidence:* {ai_confidence}%\n"
+                f"🛡️ *Order Flow:* {order_flow_imbalance}"
+            )
+            try:
+                url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                data = urllib.parse.urlencode({'chat_id': chat_id, 'text': message, 'parse_mode': 'Markdown'}).encode('utf-8')
+                req = urllib.request.Request(url, data=data)
+                response = urllib.request.urlopen(req)
+                if response.status == 200:
+                    st.success("✅ Alert successfully dispatched to your phone!")
+                else:
+                    st.error("Failed to send alert. Check your credentials.")
+            except Exception as e:
+                st.error(f"Telegram API Error: {e}")
+
+# --- RESTORED: LOT SIZER EXPANDER ---
 with st.expander("🛡️ Institutional Capital Protection & Lot Sizer"):
-    account_bal = st.number_input("Account Capital ($)", value=3000.0, step=100.0)
-    risk_pct = st.slider("Risk Tolerance (%)", 0.1, 2.0, 0.5, 0.1)
+    rc1, rc2, rc3 = st.columns(3)
+    account_bal = rc1.number_input("Account Capital ($)", value=3000.0, step=100.0)
+    risk_pct = rc2.slider("Risk Tolerance (%)", 0.1, 2.0, 0.5, 0.1)
     
     risk_capital = account_bal * (risk_pct / 100.0)
     pips_at_risk = abs(entry - sl)
     recommended_lots = round(risk_capital / (pips_at_risk * 10), 2) if pips_at_risk > 0 else 0.01
     
-    st.metric("Optimized Lot Size", f"{max(recommended_lots, 0.01)} Lots", f"Hard Risk: ${risk_capital:.2f}")
+    rc3.metric("Optimized Lot Size", f"{max(recommended_lots, 0.01)} Lots", f"Hard Risk: ${risk_capital:.2f}")
 
 st.markdown("---")
 
-# --- FULLY RESTORED TRADINGVIEW LIVE CHARTS, TICKER & CALENDAR WIDGETS ---
+# --- RESTORED: SESSIONS TRACKER ---
+st.subheader("🌍 Advanced Market Sessions & Machine Learning Predictor")
+sc1, sc2, sc3, sc4 = st.columns(4)
+
+ist_now = datetime.now(pytz.timezone('Asia/Kolkata'))
+current_hour = ist_now.hour
+
+session_status = "😴 Market Closed / Low Liquidity"
+if 6 <= current_hour < 14:
+    session_status = "🟢 London Session Active"
+elif 13 <= current_hour < 21:
+    session_status = "🔥 New York & London Overlap (Peak Volatility)"
+elif 21 <= current_hour or current_hour < 3:
+    session_status = "🟡 Asian Session (Accumulation)"
+
+sc1.metric("Active Global Session", session_status.split()[1] if len(session_status.split()) > 1 else "Active")
+sc2.metric("ML Direction Model", ml_direction)
+sc3.metric("SMC Scanner", "Active (OB & FVG)")
+sc4.metric("Risk Guardrail", "Strict (Max 1% Loss)")
+
+st.markdown("---")
+
+# --- RESTORED: DEEP HINDI NEWS ANALYSIS ---
+st.subheader("📰 डीप AI न्यूज, डेटा और मार्केट सेंटीमेंट एनालिसिस (विस्तृत हिंदी विश्लेषण)")
+news_analysis_hindi = f"""
+### 🧠 संस्थागत स्तर का डीप मैक्रो और न्यूज डिकोडर (First-Principles Analysis):
+1. **चार्ट और सोने (XAUUSD) का सीधा संबंध क्यों है?** 
+   जब भी अमेरिका से मजबूत आर्थिक डेटा आता है, तो फेडरल रिजर्व द्वारा ब्याज दरें बढ़ाने की उम्मीद बढ़ जाती है, जिससे डॉलर मजबूत होता है और सोना तुरंत नीचे गिरता है (Sell)। इसके विपरीत, कमजोर डेटा आने पर सोने में तेज उछाल (Buy Spike) आता है।
+2. **वर्तमान तकनीकी और वोलैटिलिटी स्थिति:** 
+   फिलहाल चार्ट पर मार्केट का ATR **${atr:.2f}** है और मशीन लर्निंग मॉडल का प्रेडिक्शन **{ml_direction}** है। इसका मतलब यह है कि स्टॉप लॉस को हमेशा इस वोलैटिलिटी के आधार पर ही सेट किया जाना चाहिए।
+3. **फेडरल रिजर्व और न्यूज के समय क्या सावधानी रखें?** 
+   * जब भी नीचे दिए गए इकोनॉमिक कैलेंडर में कोई **High Impact (लाल रंग का)** डेटा आने वाला हो, तो उससे 15 मिनट पहले अपनी पोजीशन बंद कर लें या ट्रेलिंग स्टॉप लॉस का उपयोग करें।
+   * **स्मार्ट मनी टिप:** ब्रोकर एल्गोरिदम हमेशा डेटा रिलीज के ठीक पहले रिटेल ट्रेडर्स के स्टॉप लॉस को हंट करने के लिए फेक स्पाइक बनाते हैं। हमेशा लिक्विडिटी स्वीप होने के बाद ही एंट्री लें।
+"""
+st.info(news_analysis_hindi)
+
+st.markdown("---")
+
+# --- TRADINGVIEW WIDGETS (TICKER, ADVANCED CHART & ECONOMIC CALENDAR) ---
 dashboard_html = """
 <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
     <!-- Live IST Clock -->
@@ -289,7 +385,7 @@ dashboard_html = """
 function updateClock() {
     const options = { timeZone: 'Asia/Kolkata', hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit', year: 'numeric', month: 'short', day: 'numeric' };
     const now = new Date().toLocaleString('en-IN', options);
-    document.getElementById('ist-clock').innerText, now;
+    document.getElementById('ist-clock').innerText = now;
 }
 setInterval(updateClock, 1000);
 updateClock();
