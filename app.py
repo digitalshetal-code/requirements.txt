@@ -31,7 +31,7 @@ def load_data():
 df_15m, df_1h = load_data()
 
 if not df_15m.empty and not df_1h.empty:
-    # 15M Calculations
+    # 15M Calculations (Fixed EMA 50 inclusion)
     df_15m['EMA_20'] = df_15m['Close'].ewm(span=20, adjust=False).mean()
     df_15m['EMA_50'] = df_15m['Close'].ewm(span=50, adjust=False).mean()
     
@@ -40,7 +40,7 @@ if not df_15m.empty and not df_1h.empty:
     
     close_15m = float(df_15m['Close'].iloc[-1])
     ema20_15m = float(df_15m['EMA_20'].iloc[-1])
-    ema50_15m = float(df['EMA_50'].iloc[-1])
+    ema50_15m = float(df_15m['EMA_50'].iloc[-1])
     
     close_1h = float(df_1h['Close'].iloc[-1])
     ema20_1h = float(df_1h['EMA_20'].iloc[-1])
