@@ -1,15 +1,15 @@
-name: Run Ultra Pro Scalper V5
+name: Run XAUUSD SMC Bot
 
 on:
   schedule:
-    - cron: '*/15 * * * *'
-  workflow_dispatch:
+    - cron: '0 * * * *' # Har 1 ghante me run hoga
+  workflow_dispatch: # Manual run button ke liye
 
 jobs:
   run-bot:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set up Python
@@ -17,15 +17,13 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: |
-          pip install -r requirements.txt metaapi-cloud-sdk numpy requests
+          pip install yfinance pandas requests
 
-      - name: Run Bot
+      - name: Run Telegram Bot
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          METAAPI_TOKEN: ${{ secrets.METAAPI_TOKEN }}
-          ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
         run: |
           python bot.py
