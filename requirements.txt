@@ -1,5 +1,6 @@
-requests
-numpy
-pandas
-yfinance
 streamlit
+yfinance
+pandas
+mplfinance
+matplotlib
+requests
