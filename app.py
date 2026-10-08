@@ -128,7 +128,7 @@ if not df_15m.empty and not df_1h.empty:
         market_regime = "⚠️ SAFE FALLBACK MODE"
         bias = "NO TRADE"
 
-# --- COMMAND CENTER METRICS BAR (STACKED FOR MOBILE) ---
+# --- COMMAND CENTER METRICS BAR ---
 st.subheader("📌 System Health & Metrics")
 st.metric("Broker Feed", "VANTAGE / XAUUSD (Auto)")
 st.metric("Execution Bias", bias)
@@ -238,4 +238,46 @@ dashboard_html = """
 <!-- TradingView Vantage Ticker -->
 <div class="tradingview-widget-container" style="margin-bottom: 15px;">
   <div class="tradingview-widget-container__widget"></div>
-  <script type="text/javascript" src="
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
+  {
+  "symbol": "VANTAGE:XAUUSD",
+  "width": "100%",
+  "colorTheme": "dark",
+  "isTransparent": true,
+  "locale": "in"
+}
+  </script>
+</div>
+
+<!-- TradingView Advanced Live Moving Chart (Vantage XAUUSD) -->
+<div class="tradingview-widget-container" style="height:520px;width:100%; margin-bottom: 20px;">
+  <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+  {
+  "width": "100%",
+  "height": "520",
+  "symbol": "VANTAGE:XAUUSD",
+  "interval": "15",
+  "timezone": "Asia/Kolkata",
+  "theme": "dark",
+  "style": "1",
+  "locale": "in",
+  "allow_symbol_change": false,
+  "calendar": false,
+  "support_host": "https://www.tradingview.com"
+}
+  </script>
+</div>
+
+<script>
+function updateClock() {
+    const options = { timeZone: 'Asia/Kolkata', hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit', year: 'numeric', month: 'short', day: 'numeric' };
+    const now = new Date().toLocaleString('en-IN', options);
+    document.getElementById('ist-clock').innerText = now;
+}
+setInterval(updateClock, 1000);
+updateClock();
+</script>
+"""
+
+components.html(dashboard_html, height=1200)
