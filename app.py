@@ -7,13 +7,31 @@ import matplotlib.pyplot as plt
 st.set_page_config(page_title="XAUUSD SMC Institutional Dashboard", layout="wide")
 
 st.title("👑 Institutional XAUUSD Smart Money Concepts (SMC) Dashboard")
-st.write("Real-time Multi-Timeframe Confluence, Order Blocks, Liquidity Sweeps, and 1:3 RRR Execution Engine.")
+st.write("Real-time Live Streaming Price, Multi-Timeframe Confluence, and 1:3 RRR Execution Engine.")
 
-# --- LIVE INDIAN STANDARD TIME (IST) CLOCK ---
-clock_html = """
-<div style="font-family: monospace; font-size: 16px; color: #2ecc71; background: #0e1117; padding: 8px; border-radius: 6px; text-align: center; border: 1px solid #30363d; margin-bottom: 15px;">
-    🕒 <b>Live Indian Standard Time (IST):</b> <span id="ist-clock">Loading...</span>
+# --- LIVE IST CLOCK & LIVE TRADINGVIEW GOLD PRICE TICKER ---
+live_ticker_html = """
+<div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+    <!-- Live IST Clock -->
+    <div style="flex: 1; min-width: 250px; font-family: monospace; font-size: 15px; color: #2ecc71; background: #0e1117; padding: 10px; border-radius: 6px; text-align: center; border: 1px solid #30363d;">
+        🕒 <b>IST Time:</b> <span id="ist-clock">Loading...</span>
+    </div>
 </div>
+
+<!-- TradingView Live XAUUSD Ticker Widget (Second-by-Second Live Price) -->
+<div class="tradingview-widget-container" style="margin-bottom: 15px;">
+  <div class="tradingview-widget-container__widget"></div>
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
+  {
+  "symbol": "OANDA:XAUUSD",
+  "width": "100%",
+  "colorTheme": "dark",
+  "isTransparent": true,
+  "locale": "in"
+}
+  </script>
+</div>
+
 <script>
 function updateClock() {
     const options = { timeZone: 'Asia/Kolkata', hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit', year: 'numeric', month: 'short', day: 'numeric' };
@@ -24,12 +42,12 @@ setInterval(updateClock, 1000);
 updateClock();
 </script>
 """
-components.html(clock_html, height=55)
+components.html(live_ticker_html, height=130)
 
-# --- FETCH MARKET DATA ---
+# --- FETCH MARKET DATA FOR SMC ANALYSIS & CHARTS ---
 @st.cache_data(ttl=60)
 def load_data():
-    ticker = "GC=F"  # Reliable Gold Futures Ticker
+    ticker = "GC=F"
     df = yf.download(ticker, period="3d", interval="15m", progress=False)
     if not df.empty:
         if isinstance(df.columns, pd.MultiIndex):
@@ -57,7 +75,7 @@ if not df.empty:
         tp = round(entry - 36.0, 2)
 
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Live Gold Price", f"${close_price:,.2f}", f"{close_price - prev_close:.2f}")
+    col1.metric("Analysis Reference Price", f"${close_price:,.2f}", f"{close_price - prev_close:.2f}")
     col2.metric("Market Bias", "BULLISH" if close_price >= ema_value else "BEARISH")
     col3.metric("Active Liquidity State", "BOS / POL")
     col4.metric("Target RRR", "1:3.0")
