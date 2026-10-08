@@ -8,10 +8,10 @@ import urllib.parse
 from datetime import datetime
 import pytz
 
-st.set_page_config(page_title="Vantage Autonomous 50-Point Terminal", layout="wide")
+st.set_page_config(page_title="Vantage Ultimate Institutional Terminal", layout="wide")
 
-st.title("🛰️ Vantage Fully Automated XAUUSD Command Center")
-st.write("100% Automated Live Data Feed, Zero-Delay Execution Matrix, and 50 Active Institutional Guardrails.")
+st.title("🛰️ Vantage Ultimate Automated XAUUSD Command Center")
+st.write("100% Fully Restored Feed: Live TradingView Charts, Economic Calendar, and 50 Active Institutional Guardrails.")
 
 # --- AUTOMATED FORCE-REFRESH CONTROL PANEL ---
 st.sidebar.header("⚙️ Execution Control Panel")
@@ -21,7 +21,7 @@ if st.sidebar.button("🔄 Force-Refresh Live Feed"):
 
 # --- ROBUST AUTOMATED VANTAGE/PROXY DATA FETCHER ---
 @st.cache_data(ttl=15)
-def fetch_automated_institutional_data():
+def fetch_ultimate_institutional_data():
     try:
         ticker = "XAUUSD=X"
         df_15m = yf.download(ticker, period="3d", interval="15m", progress=False)
@@ -41,7 +41,7 @@ def fetch_automated_institutional_data():
     except Exception as e:
         return pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
 
-df_15m, df_1h, df_4h = fetch_automated_institutional_data()
+df_15m, df_1h, df_4h = fetch_ultimate_institutional_data()
 
 # --- SAFE DEFAULT INITIALIZATION ---
 atr = 5.0
@@ -226,7 +226,7 @@ with st.expander("🛡️ Institutional Capital Protection & Lot Sizer"):
 
 st.markdown("---")
 
-# --- TRADINGVIEW WIDGETS ---
+# --- FULLY RESTORED TRADINGVIEW LIVE CHARTS, TICKER & CALENDAR WIDGETS ---
 dashboard_html = """
 <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
     <!-- Live IST Clock -->
@@ -269,15 +269,31 @@ dashboard_html = """
   </script>
 </div>
 
+<!-- TradingView Economic Calendar (IST Aligned) -->
+<div class="tradingview-widget-container" style="height:460px;width:100%">
+  <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>
+  {
+  "width": "100%",
+  "height": "460",
+  "colorTheme": "dark",
+  "isTransparent": true,
+  "locale": "in",
+  "importanceFilter": "-1,0,1",
+  "currencyFilter": "USD"
+}
+  </script>
+</div>
+
 <script>
 function updateClock() {
     const options = { timeZone: 'Asia/Kolkata', hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit', year: 'numeric', month: 'short', day: 'numeric' };
     const now = new Date().toLocaleString('en-IN', options);
-    document.getElementById('ist-clock').innerText = now;
+    document.getElementById('ist-clock').innerText, now;
 }
 setInterval(updateClock, 1000);
 updateClock();
 </script>
 """
 
-components.html(dashboard_html, height=1200)
+components.html(dashboard_html, height=1380)
