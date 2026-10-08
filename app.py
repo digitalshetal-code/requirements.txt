@@ -3,7 +3,6 @@ import yfinance as yf
 import pandas as pd
 import mplfinance as mpf
 import matplotlib.pyplot as plt
-import io
 
 st.set_page_config(page_title="XAUUSD SMC Institutional Dashboard", layout="wide")
 
@@ -56,14 +55,15 @@ if not df.empty:
     st.markdown("---")
     st.subheader("📊 XAUUSD 15M Price Action & SMC Levels")
     
-    # Generate Candlestick Chart for Streamlit
+    # Simplified mplfinance plot without dictionary error
     fig, axes = mpf.plot(
         df[['Open', 'High', 'Low', 'Close', 'Volume']], 
         type='candle', 
         style='dark_background', 
         volume=True, 
         figsize=(10, 5),
-        hlines=dict(hlines=[entry, sl, tp], colors=['#3498db', '#e74c3c', '#2ecc71'], linestyle='--', linewidths=1.5),
+        hlines=[entry, sl, tp],
+        colors=['#3498db', '#e74c3c', '#2ecc71'],
         returnfig=True
     )
     st.pyplot(fig)
