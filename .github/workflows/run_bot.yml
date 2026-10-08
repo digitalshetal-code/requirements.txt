@@ -2,7 +2,7 @@ name: Run XAUUSD SMC Bot
 
 on:
   schedule:
-    - cron: '0 * * * *' # Har 1 ghante me run hoga
+    - cron: '0 * * * *' # Har 1 ghante me automatic run hoga
   workflow_dispatch: # Manual run button ke liye
 
 jobs:
