@@ -2,37 +2,39 @@ import os
 import requests
 import yfinance as yf
 import pandas as pd
-import matplotlib.pyplot as plt
+import mplfinance as mpf
 import io
 
 # --- LOAD SECRETS SECURELY ---
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-def generate_smc_chart(df, entry, sl, tp):
-    """Generates an institutional SMC chart with Entry, SL, and TP levels."""
-    plt.style.use('dark_background')
-    fig, ax = plt.subplots(figsize=(10, 5))
+def generate_candlestick_chart(df, entry, sl, tp):
+    """Generates a professional Candlestick SMC chart with Entry, SL, and TP levels."""
+    # Rename columns to match mplfinance requirements (Open, High, Low, Close, Volume)
+    df = df[['Open', 'High', 'Low', 'Close', 'Volume']].copy()
     
-    # Plotting Price Action
-    ax.plot(df.index, df['Close'], label='XAUUSD Price', color='#00ffcc', linewidth=1.5)
+    # Custom dark market style
+    mc = mpf.make_marketcolors(up='#2ecc71', down='#e74c3c', wick='inherit', volume='in')
+    s = mpf.make_mpf_style(marketcolors=mc, bg_code='#0e1117', rc={'axes.labelcolor': 'white', 'xtick.color': 'white', 'ytick.color': 'white', 'grid.color': '#30363d'})
     
-    # Horizontal lines for Trade Setup
-    ax.axhline(y=entry, color='#3498db', linestyle='--', linewidth=1.5, label=f'Entry: ${entry}')
-    ax.axhline(y=sl, color='#e74c3c', linestyle='-', linewidth=1.5, label=f'Stop Loss: ${sl}')
-    ax.axhline(y=tp, color='#2ecc71', linestyle='-', linewidth=1.5, label=f'Take Profit (1:3): ${tp}')
+    # Adding horizontal lines as hlines in mplfinance
+    levels = [entry, sl, tp]
+    colors = ['#3498db', '#e74c3c', '#2ecc71']
     
-    ax.set_title('👑 XAUUSD Institutional SMC Setup', fontsize=14, color='white', fontweight='bold')
-    ax.set_xlabel('Time', color='gray')
-    ax.set_ylabel('Price (USD)', color='gray')
-    ax.legend(loc='upper left', facecolor='#161b22', edgecolor='none')
-    ax.grid(True, color='#30363d', linestyle=':', alpha=0.6)
-    
-    plt.tight_layout()
-    
-    # Save plot to bytes buffer
     buf = io.BytesIO()
-    plt.savefig(buf, format='png', dpi=150, facecolor='#0e1117')
+    fig, axes = mpf.plot(
+        df, 
+        type='candle', 
+        style=s, 
+        volume=True, 
+        figsize=(11, 6),
+        hlines=dict(hlines=levels, colors=colors, linestyle='--', linewidths=1.5),
+        returnfig=True,
+        title=dict(title="👑 XAUUSD Institutional SMC Setup", color='white', fontsize=14)
+    )
+    
+    fig.savefig(buf, format='png', dpi=150, facecolor='#0e1117')
     buf.seek(0)
     plt.close(fig)
     return buf
@@ -57,36 +59,35 @@ def send_telegram_photo(photo_buf, caption):
 
 def check_market_and_alert():
     ticker = "GC=F"
-    df = yf.download(ticker, period="2d", interval="15m", progress=False)
+    df = yf.download(ticker, period="3d", interval="15m", progress=False)
     
     if not df.empty:
+        # Handle multi-index columns if returned by yfinance
         if isinstance(df.columns, pd.MultiIndex):
-            close_prices = df['Close'].iloc[:, 0]
-            close_price = float(close_prices.iloc[-1])
-        else:
-            close_prices = df['Close']
-            close_price = float(close_prices.iloc[-1])
+            df.columns = df.columns.get_level_values(0)
+            
+        close_price = float(df['Close'].iloc[-1])
             
         entry = round(close_price - 3.0, 2)
         sl = round(entry - 12.0, 2)
         tp = round(entry + 36.0, 2) # 1:3 RRR
         
-        # Generate Chart Diagram
-        chart_buffer = generate_smc_chart(df, entry, sl, tp)
+        # Generate Candlestick Chart Diagram
+        chart_buffer = generate_candlestick_chart(df, entry, sl, tp)
         
-        # Professional Telegram Caption
+        # Professional Telegram Caption with Dollar values
         caption = (
-            f"👑 *Institutional XAUUSD SMC Setup* 👑\n\n"
+            f"👑 *Institutional XAUUSD SMC Dashboard* 👑\n\n"
             f"📊 *Live Price:* `${close_price:,.2f}`\n"
             f"🔹 *Market Structure:* Bullish BOS / Order Block\n"
             f"🎯 *Institutional Entry:* `${entry:,.2f}`\n"
             f"🛑 *Stop Loss (SL):* `${sl:,.2f}`\n"
-            f"💰 *Take Profit (TP 1:3):* `${tp:,.2f}`\n\n"
-            f"_Chart automatically generated via GitHub Actions._"
+            f"💰 *Take Profit (1:3):* `${tp:,.2f}`\n\n"
+            f"_Professional Candlestick Chart via GitHub Actions._"
         )
         
         send_telegram_photo(chart_buffer, caption)
-        print("SMC Chart and alert sent successfully to Telegram!")
+        print("SMC Candlestick Chart and alert sent successfully to Telegram!")
     else:
         print("Failed to fetch market data.")
 
