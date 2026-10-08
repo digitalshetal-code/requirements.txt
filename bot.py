@@ -12,14 +12,12 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 def generate_candlestick_chart(df, entry, sl, tp):
     """Generates a professional Candlestick SMC chart with Entry, SL, and TP levels."""
-    # Rename columns to match mplfinance requirements (Open, High, Low, Close, Volume)
     df = df[['Open', 'High', 'Low', 'Close', 'Volume']].copy()
     
-    # Custom dark market style
+    # Custom market style
     mc = mpf.make_marketcolors(up='#2ecc71', down='#e74c3c', wick='inherit', volume='in')
-    s = mpf.make_mpf_style(marketcolors=mc, bg_code='#0e1117', rc={'axes.labelcolor': 'white', 'xtick.color': 'white', 'ytick.color': 'white', 'grid.color': '#30363d'})
+    s = mpf.make_mpf_style(marketcolors=mc, facecolor='#0e1117', figcolor='#0e1117', rc={'axes.labelcolor': 'white', 'xtick.color': 'white', 'ytick.color': 'white', 'grid.color': '#30363d'})
     
-    # Adding horizontal lines as hlines in mplfinance
     levels = [entry, sl, tp]
     colors = ['#3498db', '#e74c3c', '#2ecc71']
     
@@ -63,7 +61,6 @@ def check_market_and_alert():
     df = yf.download(ticker, period="3d", interval="15m", progress=False)
     
     if not df.empty:
-        # Handle multi-index columns if returned by yfinance
         if isinstance(df.columns, pd.MultiIndex):
             df.columns = df.columns.get_level_values(0)
             
@@ -73,10 +70,8 @@ def check_market_and_alert():
         sl = round(entry - 12.0, 2)
         tp = round(entry + 36.0, 2) # 1:3 RRR
         
-        # Generate Candlestick Chart Diagram
         chart_buffer = generate_candlestick_chart(df, entry, sl, tp)
         
-        # Professional Telegram Caption with Dollar values
         caption = (
             f"👑 *Institutional XAUUSD SMC Dashboard* 👑\n\n"
             f"📊 *Live Price:* `${close_price:,.2f}`\n"
