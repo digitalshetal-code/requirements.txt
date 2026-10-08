@@ -3,6 +3,7 @@ import requests
 import yfinance as yf
 import pandas as pd
 
+# --- LOAD SECRETS SECURELY ---
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
@@ -47,7 +48,7 @@ def check_market_and_alert():
         )
         
         send_telegram_alert(message)
-        print("New SMC Dashboard alert sent successfully!")
+        print("Institutional SMC Dashboard alert sent successfully!")
     else:
         print("Failed to fetch market data.")
 
