@@ -4,12 +4,12 @@ import yfinance as yf
 import pandas as pd
 import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="XAUUSD SMC Institutional Dashboard", layout="wide")
+st.set_page_config(page_title="XAUUSD Spot SMC Dashboard", layout="wide")
 
-st.title("👑 Institutional XAUUSD Smart Money Concepts (SMC) Dashboard")
-st.write("Real-time Multi-Timeframe Confluence, Order Blocks, Liquidity Sweeps, and 1:3 RRR Execution Engine.")
+st.title("👑 Institutional XAUUSD Spot SMC Dashboard")
+st.write("Real-time Spot Data Analysis matched with Exness Pricing Structure.")
 
-# --- LIVE INDIAN STANDARD TIME (IST) CLOCK ---
+# Live IST Clock
 clock_html = """
 <div style="font-family: monospace; font-size: 16px; color: #2ecc71; background: #0e1117; padding: 8px; border-radius: 6px; text-align: center; border: 1px solid #30363d; margin-bottom: 15px;">
     🕒 <b>Live Indian Standard Time (IST):</b> <span id="ist-clock">Loading...</span>
@@ -26,10 +26,10 @@ updateClock();
 """
 components.html(clock_html, height=55)
 
-# --- FETCH MARKET DATA ---
 @st.cache_data(ttl=60)
 def load_data():
-    ticker = "GC=F"
+    # Spot Ticker for accurate Exness alignment
+    ticker = "XAUUSD=X"
     df = yf.download(ticker, period="3d", interval="15m", progress=False)
     if not df.empty:
         if isinstance(df.columns, pd.MultiIndex):
@@ -39,76 +39,63 @@ def load_data():
 df = load_data()
 
 if not df.empty:
-    # Stable Trend Filter using 20 EMA instead of just last candle
     df['EMA'] = df['Close'].ewm(span=20, adjust=False).mean()
     
     close_price = float(df['Close'].iloc[-1])
     prev_close = float(df['Close'].iloc[-2])
     ema_value = float(df['EMA'].iloc[-1])
     
-    # STABLE LOGIC USING EMA FILTER
     if close_price >= ema_value:
-        signal_type = "🟢 BULLISH / BUY SETUP (Above 20 EMA)"
-        entry = round(close_price - 3.0, 2)
-        sl = round(entry - 12.0, 2)
-        tp = round(entry + 36.0, 2)
+        signal_type = "🟢 BULLISH / BUY SETUP"
+        entry = round(close_price - 1.5, 2)
+        sl = round(entry - 6.0, 2)
+        tp = round(entry + 18.0, 2)
     else:
-        signal_type = "🔴 BEARISH / SELL SETUP (Below 20 EMA)"
-        entry = round(close_price + 3.0, 2)
-        sl = round(entry + 12.0, 2)
-        tp = round(entry - 36.0, 2)
+        signal_type = "🔴 BEARISH / SELL SETUP"
+        entry = round(close_price + 1.5, 2)
+        sl = round(entry + 6.0, 2)
+        tp = round(entry - 18.0, 2)
 
-    # Top Metrics Display
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Live XAUUSD Price", f"${close_price:,.2f}", f"{close_price - prev_close:.2f}")
-    col2.metric("Market Bias", "BULLISH" if close_price >= ema_value else "BEARISH")
-    col3.metric("Active Liquidity State", "BOS / POL")
+    col1.metric("Live Spot XAUUSD", f"${close_price:,.2f}", f"{close_price - prev_close:.2f}")
+    col2.metric("Market Bias", signal_type.split()[0] + " " + signal_type.split()[1])
+    col3.metric("Trend Filter", "20 EMA Stable")
     col4.metric("Target RRR", "1:3.0")
 
     st.markdown("---")
-    st.subheader("🎯 Active Institutional Trade Setup")
+    st.subheader("🎯 Active Trade Setup")
     
     tcol1, tcol2, tcol3 = st.columns(3)
-    tcol1.info(f"**Institutional Entry Zone:**\n\n `${entry:,.2f}`")
-    tcol2.error(f"**Structural Stop Loss (SL):**\n\n `${sl:,.2f}`")
-    tcol3.success(f"**Take Profit Target (TP):**\n\n `${tp:,.2f}`")
+    tcol1.info(f"**Entry Zone:**\n\n `${entry:,.2f}`")
+    tcol2.error(f"**Stop Loss (SL):**\n\n `${sl:,.2f}`")
+    tcol3.success(f"**Take Profit (TP):**\n\n `${tp:,.2f}`")
 
     st.markdown("---")
-    st.subheader("📊 XAUUSD 15M Price Action & SMC Levels")
+    st.subheader("📊 Spot Price Action & SMC Levels")
     
-    # Clean Matplotlib Candlestick Chart with EMA Line
     fig, ax = plt.subplots(figsize=(10, 5))
     fig.patch.set_facecolor('#0e1117')
     ax.set_facecolor('#0e1117')
     
     df_plot = df.tail(100).copy()
-    
     up = df_plot['Close'] >= df_plot['Open']
     down = df_plot['Close'] < df_plot['Open']
     
-    # Wicks
     ax.vlines(df_plot.index[up], df_plot['Low'][up], df_plot['High'][up], color='#2ecc71', linewidth=1)
     ax.vlines(df_plot.index[down], df_plot['Low'][down], df_plot['High'][down], color='#e74c3c', linewidth=1)
-    
-    # Bodies
     ax.bar(df_plot.index[up], df_plot['Close'][up] - df_plot['Open'][up], bottom=df_plot['Open'][up], color='#2ecc71', width=0.015, edgecolor='#2ecc71')
     ax.bar(df_plot.index[down], df_plot['Open'][down] - df_plot['Close'][down], bottom=df_plot['Close'][down], color='#e74c3c', width=0.015, edgecolor='#e74c3c')
     
-    # Plot 20 EMA line
-    ax.plot(df_plot.index, df_plot['EMA'], color='#f1c40f', linewidth=1.5, label='20 EMA Trend')
-
-    # Horizontal SMC Lines
+    ax.plot(df_plot.index, df_plot['EMA'], color='#f1c40f', linewidth=1.5, label='20 EMA')
     ax.axhline(entry, color='#3498db', linestyle='--', linewidth=1.5, label=f'Entry: ${entry}')
-    ax.axhline(sl, color='#e74c3c', linestyle='--', linewidth=1.5, label=f'Stop Loss: ${sl}')
-    ax.axhline(tp, color='#2ecc71', linestyle='--', linewidth=1.5, label=f'Take Profit: ${tp}')
+    ax.axhline(sl, color='#e74c3c', linestyle='--', linewidth=1.5, label=f'SL: ${sl}')
+    ax.axhline(tp, color='#2ecc71', linestyle='--', linewidth=1.5, label=f'TP: ${tp}')
     
     ax.tick_params(colors='white')
-    ax.xaxis.label.set_color('white')
-    ax.yaxis.label.set_color('white')
     ax.grid(True, color='#30363d', linestyle='--', alpha=0.5)
     ax.legend(loc='upper left', facecolor='#0e1117', labelcolor='white')
     
     st.pyplot(fig)
-
 else:
-    st.error("Failed to fetch market data. Please check connection.")
+    st.error("Failed to fetch spot market data.")
+    
