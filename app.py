@@ -30,26 +30,32 @@ def load_deep_market_data():
 
 df_5m, df_15m, df_1h = load_deep_market_data()
 
+# Safe fallback ATR initialization
+atr = 5.0
+market_regime = "NEUTRAL"
+bias = "NEUTRAL (WAIT)"
+entry, sl, tp = 0.0, 0.0, 0.0
+liquidity_status = "Scanning Institutional Liquidity..."
+neural_score = 50
+
 if not df_15m.empty and not df_1h.empty:
-    # --- QUANTITATIVE MATH & NEURAL ENGINE ---
     df_15m['EMA_9'] = df_15m['Close'].ewm(span=9, adjust=False).mean()
     df_15m['EMA_21'] = df_15m['Close'].ewm(span=21, adjust=False).mean()
     df_15m['EMA_50'] = df_15m['Close'].ewm(span=50, adjust=False).mean()
     df_1h['EMA_20'] = df_1h['Close'].ewm(span=20, adjust=False).mean()
     
-    # Volatility & Momentum (ATR & RSI approximation)
     df_15m['HL_Spread'] = df_15m['High'] - df_15m['Low']
     atr = float(df_15m['HL_Spread'].rolling(14).mean().iloc[-1])
+    if np.isnan(atr):
+        atr = 5.0
     
     close_price = float(df_15m['Close'].iloc[-1])
     ema9 = float(df_15m['EMA_9'].iloc[-1])
-    ema21 = float(df['EMA_21'].iloc[-1])
+    ema21 = float(df_15m['EMA_21'].iloc[-1])
     ema50 = float(df['EMA_50'].iloc[-1])
     macro_1h = float(df_1h['Close'].iloc[-1])
     macro_ema20 = float(df_1h['EMA_20'].iloc[-1])
     
-    # Neural Bias & Confidence Calculation (Elon Musk First-Principles Logic)
-    neural_score = 50
     if close_price > ema9 > ema21 > ema50:
         market_regime = "🟢 AGGRESSIVE BULLISH EXPANSION"
         bias = "LONG (BUY)"
@@ -82,50 +88,50 @@ if not df_15m.empty and not df_1h.empty:
 
     neural_score = min(max(neural_score, 10), 98)
 
-    # --- COMMAND CENTER METRICS BAR ---
-    m1, m2, m3, m4, m5 = st.columns(5)
-    m1.metric("Neural Market Regime", market_regime.split()[1])
-    m2.metric("AI Execution Bias", bias)
-    m3.metric("Neural Confidence", f"{neural_score}%")
-    m4.metric("Volatility (ATR)", f"${atr:.2f}")
-    m5.metric("Execution Engine", "ARMED & SECURE")
+# --- COMMAND CENTER METRICS BAR ---
+m1, m2, m3, m4, m5 = st.columns(5)
+m1.metric("Neural Market Regime", market_regime.split()[1] if len(market_regime.split()) > 1 else "ACTIVE")
+m2.metric("AI Execution Bias", bias)
+m3.metric("Neural Confidence", f"{neural_score}%")
+m4.metric("Volatility (ATR)", f"${atr:.2f}")
+m5.metric("Execution Engine", "ARMED & SECURE")
 
-    st.markdown("---")
+st.markdown("---")
 
-    # --- EXECUTION MATRIX DISPLAY ---
-    st.subheader(f"⚡ Institutional Execution Setup ({market_regime})")
+# --- EXECUTION MATRIX DISPLAY ---
+st.subheader(f"⚡ Institutional Execution Setup ({market_regime})")
+
+t1, t2, t3, t4 = st.columns(4)
+t1.info(f"**Optimal Entry Target:**\n\n `${entry:,.2f}`")
+t2.error(f"**Neural Stop Loss (SL):**\n\n `${sl:,.2f}`")
+t3.success(f"**Take Profit Target (TP):**\n\n `${tp:,.2f}`")
+t4.warning(f"**Institutional Liquidity State:**\n\n `{liquidity_status}`")
+
+if neural_score >= 80:
+    st.success("🟢 **SYSTEM STATUS: HIGH PROBABILITY EXECUTION ZONE.** Institutional flow matches multi-timeframe alignment. Trade authorized.")
+elif neural_score >= 50:
+    st.warning("🟡 **SYSTEM STATUS: CAUTION / ACCUMULATION.** Price is testing institutional liquidity boundaries. Wait for structural breakout.")
+else:
+    st.error("🔴 **SYSTEM STATUS: CHOPPY / NO-TRADE ZONE.** Market is hunting retail stop losses. Stand down.")
+
+# --- QUANTITATIVE RISK & POSITION SIZER ---
+with st.expander("🛡️ Autonomous Risk Management & Quantum Lot Sizer"):
+    rc1, rc2, rc3 = st.columns(3)
+    account_bal = rc1.number_input("Account Capital ($)", value=2000.0, step=100.0)
+    risk_pct = rc2.slider("Risk Tolerance per Trade (%)", 0.5, 5.0, 1.0, 0.5)
     
-    t1, t2, t3, t4 = st.columns(4)
-    t1.info(f"**Optimal Entry Target:**\n\n `${entry:,.2f}`")
-    t2.error(f"**Neural Stop Loss (SL):**\n\n `${sl:,.2f}`")
-    t3.success(f"**Take Profit Target (TP):**\n\n `${tp:,.2f}`")
-    t4.warning(f"**Institutional Liquidity State:**\n\n `{liquidity_status}`")
+    risk_capital = account_bal * (risk_pct / 100.0)
+    pips_at_risk = abs(entry - sl)
+    recommended_lots = round(risk_capital / (pips_at_risk * 10), 2) if pips_at_risk > 0 else 0.01
+    
+    rc3.metric("Calculated Lot Size", f"{max(recommended_lots, 0.01)} Lots", f"Max Financial Risk: ${risk_capital:.2f}")
 
-    if neural_score >= 80:
-        st.success("🟢 **SYSTEM STATUS: HIGH PROBABILITY EXECUTION ZONE.** Institutional flow matches multi-timeframe alignment. Trade authorized.")
-    elif neural_score >= 50:
-        st.warning("🟡 **SYSTEM STATUS: CAUTION / ACCUMULATION.** Price is testing institutional liquidity boundaries. Wait for structural breakout.")
-    else:
-        st.error("🔴 **SYSTEM STATUS: CHOPPY / NO-TRADE ZONE.** Market is hunting retail stop losses. Stand down.")
-
-    # --- QUANTITATIVE RISK & POSITION SIZER ---
-    with st.expander("🛡️ Autonomous Risk Management & Quantum Lot Sizer"):
-        rc1, rc2, rc3 = st.columns(3)
-        account_bal = rc1.number_input("Account Capital ($)", value=2000.0, step=100.0)
-        risk_pct = rc2.slider("Risk Tolerance per Trade (%)", 0.5, 5.0, 1.0, 0.5)
-        
-        risk_capital = account_bal * (risk_pct / 100.0)
-        pips_at_risk = abs(entry - sl)
-        recommended_lots = round(risk_capital / (pips_at_risk * 10), 2) if pips_at_risk > 0 else 0.01
-        
-        rc3.metric("Calculated Lot Size", f"{max(recommended_lots, 0.01)} Lots", f"Max Financial Risk: ${risk_capital:.2f}")
-
-    st.markdown("---")
+st.markdown("---")
 
 # --- ELON MUSK STYLE DEEP AI NEWS & MACRO SENTIMENT (HINDI) ---
 st.subheader("🌐 Neural News & Macroeconomic Impact Intelligence (डीप हिंदी विश्लेषण)")
 
-st.info(f"""
+news_analysis_text = f"""
 ### 🧠 एलन मस्क फर्स्ट-पर्पिनिपल्स मार्केट डीकोड (First-Principles Analysis):
 1. **मार्केट का मूल सत्य (Root Truth):** 
    सोना (XAUUSD) किसी के कहने से नहीं चलता, यह पूरी तरह से **लिक्विडिटी (Liquidity) और संस्थागत ऑर्डर ब्लॉक्स (Institutional Order Blocks)** पर चलता है। जब बड़े बैंक और हेज फंड्स रिटेल ट्रेडर्स के स्टॉप लॉस को हंट करते हैं, तभी असली मूव आता है।
@@ -134,7 +140,8 @@ st.info(f"""
 3. **फेडरल रिजर्व और मैक्रो न्यूज का असर:** 
    * जब भी अमेरिका का इन्फ्लेशन (CPI) या जॉब डेटा (NFP) अनुमान से अलग आता है, तो एल्गोरिदम मिलीसेकंड में सोने को ऊपर या नीचे खींचते हैं। 
    * **फिनांस कमांड:** यदि नीचे दिए गए लाइव कैलेंडर में कोई 'High-Impact' लाल डेटा आने वाला हो, तो उससे 10 मिनट पहले अपनी सभी पोजीशन को न्यूट्रल कर लें या ट्रेलिंग स्टॉप लॉस का उपयोग करें।
-""")
+"""
+st.info(news_analysis_text)
 
 st.markdown("---")
 
