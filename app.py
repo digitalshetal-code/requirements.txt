@@ -1,8 +1,8 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
-import mplfinance as mpf
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
 st.set_page_config(page_title="XAUUSD SMC Institutional Dashboard", layout="wide")
 
@@ -55,17 +55,38 @@ if not df.empty:
     st.markdown("---")
     st.subheader("📊 XAUUSD 15M Price Action & SMC Levels")
     
-    # Simplified mplfinance plot without dictionary error
-    fig, axes = mpf.plot(
-        df[['Open', 'High', 'Low', 'Close', 'Volume']], 
-        type='candle', 
-        style='dark_background', 
-        volume=True, 
-        figsize=(10, 5),
-        hlines=[entry, sl, tp],
-        colors=['#3498db', '#e74c3c', '#2ecc71'],
-        returnfig=True
-    )
+    # Clean Matplotlib Candlestick Chart
+    fig, ax = plt.subplots(figsize=(10, 5))
+    fig.patch.set_facecolor('#0e1117')
+    ax.set_facecolor('#0e1117')
+    
+    df_plot = df.tail(100).copy() # Last 100 candles for clear view
+    df_plot['date_num'] = mdates.date2num(df_plot.index)
+    
+    width = 0.6 / 24 # Candle width
+    
+    up = df_plot['Close'] >= df_plot['Open']
+    down = df_plot['Close'] < df_plot['Open']
+    
+    # Wicks (High to Low)
+    ax.vlines(df_plot.index[up], df_plot['Low'][up], df_plot['High'][up], color='#2ecc71', linewidth=1)
+    ax.vlines(df_plot.index[down], df_plot['Low'][down], df_plot['High'][down], color='#e74c3c', linewidth=1)
+    
+    # Bodies (Open to Close)
+    ax.bar(df_plot.index[up], df_plot['Close'][up] - df_plot['Open'][up], bottom=df_plot['Open'][up], color='#2ecc71', width=0.015, edgecolor='#2ecc71')
+    ax.bar(df_plot.index[down], df_plot['Open'][down] - df_plot['Close'][down], bottom=df_plot['Close'][down], color='#e74c3c', width=0.015, edgecolor='#e74c3c')
+    
+    # Horizontal SMC Lines
+    ax.axhline(entry, color='#3498db', linestyle='--', linewidth=1.5, label=f'Entry: ${entry}')
+    ax.axhline(sl, color='#e74c3c', linestyle='--', linewidth=1.5, label=f'Stop Loss: ${sl}')
+    ax.axhline(tp, color='#2ecc71', linestyle='--', linewidth=1.5, label=f'Take Profit: ${tp}')
+    
+    ax.tick_params(colors='white')
+    ax.xaxis.label.set_color('white')
+    ax.yaxis.label.set_color('white')
+    ax.grid(True, color='#30363d', linestyle='--', alpha=0.5)
+    ax.legend(loc='upper left', facecolor='#0e1117', labelcolor='white')
+    
     st.pyplot(fig)
 
 else:
