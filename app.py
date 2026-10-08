@@ -138,12 +138,11 @@ st.metric("Circuit Breaker", "TRIPPED 🚨" if kill_switch_active else "SECURE �
 
 st.markdown("---")
 
-# --- NEW: REAL-TIME SPREAD & DISCREPANCY GUARD ---
+# --- REAL-TIME SPREAD & DISCREPANCY GUARD ---
 st.subheader("⚡ Vantage Spread & Latency Watchdog")
-sc_guard1, sc_guard2, sc_guard3 = st.columns(3)
-sc_guard1.metric("Live Feed Spread", "0.2 Pips (Normal)", "Zero Lag")
-sc_guard2.metric("News Flat-Line Timer", "Active (Standby)", "Safe")
-sc_guard3.metric("MT5 Bridge Status", "CONNECTED 🟢", "1:1 Sync")
+st.metric("Live Feed Spread", "0.2 Pips (Normal)", "Zero Lag")
+st.metric("News Flat-Line Timer", "Active (Standby)", "Safe")
+st.metric("MT5 Bridge Status", "CONNECTED 🟢", "1:1 Sync")
 
 st.markdown("---")
 
@@ -211,51 +210,47 @@ st.markdown("---")
 
 # --- MULTI-TIMEFRAME CONFLUENCE MATRIX ---
 st.subheader("📊 Multi-Timeframe Confluence Matrix (15M, 1H, 4H)")
-grid1, grid2, grid3, grid4 = st.columns(4)
-grid1.metric("15M Micro Trend", trend_15m)
-grid2.metric("1H Meso Trend", trend_1h)
-grid3.metric("4H Macro Trend", trend_4h)
-grid4.metric("Confluence Status", "ALIGNED ⚡" if trend_15m == trend_1h == trend_4h else "DIVERGENT ⚠️")
+st.metric("15M Micro Trend", trend_15m)
+st.metric("1H Meso Trend", trend_1h)
+st.metric("4H Macro Trend", trend_4h)
+st.metric("Confluence Status", "ALIGNED ⚡" if trend_15m == trend_1h == trend_4h else "DIVERGENT ⚠️")
 
 st.markdown("---")
 
 # --- EXECUTION SETUP ---
 st.subheader(f"⚡ Automated Execution Setup ({market_regime})")
 
-t1, t2, t3, t4, t5 = st.columns(5)
-t1.info(f"**Entry:**\n\n `${entry:,.2f}`")
-t2.error(f"**Guarded SL:**\n\n `${sl:,.2f}`")
-t3.success(f"**TP 1 (1:2):**\n\n `${tp1:,.2f}`")
-t4.success(f"**TP 2 (1:3.5):**\n\n `${tp2:,.2f}`")
-t5.success(f"**TP 3 (1:5):**\n\n `${tp3:,.2f}`")
+st.info(f"**Entry:** `${entry:,.2f}`")
+st.error(f"**Guarded SL:** `${sl:,.2f}`")
+st.success(f"**TP 1 (1:2):** `${tp1:,.2f}`")
+st.success(f"**TP 2 (1:3.5):** `${tp2:,.2f}`")
+st.success(f"**TP 3 (1:5):** `${tp3:,.2f}`")
 
 st.warning(f"**SMC Structure & FVG State:** `{smc_structure}`")
 
 st.markdown("---")
 
-# --- NEW: DIRECT MT5 AUTO-EXECUTION WEBHOOK BRIDGE ---
+# --- DIRECT MT5 AUTO-EXECUTION WEBHOOK BRIDGE ---
 with st.expander("🚀 Direct MT5 Webhook & Auto-Execution Bridge"):
     st.write("Connect this dashboard directly to your Vantage MetaTrader 5 EA (Expert Advisor) via Webhook URL.")
     webhook_url = st.text_input("Vantage MT5 EA Webhook URL", placeholder="https://your-mt5-bridge-endpoint.com/webhook")
     secret_key = st.text_input("API Secret Token", type="password", placeholder="••••••••••••••••")
     
-    col_w1, col_w2 = st.columns(2)
-    if col_w1.button("🟢 Enable Auto-Execution to MT5"):
+    if st.button("🟢 Enable Auto-Execution to MT5"):
         if not webhook_url:
             st.error("Please provide a valid MT5 Webhook URL.")
         else:
             st.success("✅ Auto-Execution Bridge Active! Orders will now execute directly on Vantage MT5 with zero delay.")
-    if col_w2.button("🔴 Emergency Stop Auto-Execution"):
+    if st.button("🔴 Emergency Stop Auto-Execution"):
         st.warning("⚠️ Auto-Execution suspended. Manual override engaged.")
 
 st.markdown("---")
 
 # --- ORDER FLOW & HEATMAP ---
 st.subheader("🔥 Order Flow & Liquidity Heatmap Matrix")
-lc1, lc2, lc3 = st.columns(3)
-lc1.metric("Order Flow", order_flow_imbalance)
-lc2.metric("Retail Trap Zone", "Protected by ATR Guard")
-lc3.metric("Execution Spread Buffer", "0.2 Pips Configured")
+st.metric("Order Flow", order_flow_imbalance)
+st.metric("Retail Trap Zone", "Protected by ATR Guard")
+st.metric("Execution Spread Buffer", "0.2 Pips Configured")
 
 st.info(f"""
 💡 **Order Flow Analysis:**
@@ -298,21 +293,19 @@ with st.expander("📡 Telegram Automated Alert Dispatcher"):
 
 # --- LOT SIZER EXPANDER ---
 with st.expander("🛡️ Institutional Capital Protection & Lot Sizer"):
-    rc1, rc2, rc3 = st.columns(3)
-    account_bal = rc1.number_input("Account Capital ($)", value=3000.0, step=100.0)
-    risk_pct = rc2.slider("Risk Tolerance (%)", 0.1, 2.0, 0.5, 0.1)
+    account_bal = st.number_input("Account Capital ($)", value=3000.0, step=100.0)
+    risk_pct = st.slider("Risk Tolerance (%)", 0.1, 2.0, 0.5, 0.1)
     
     risk_capital = account_bal * (risk_pct / 100.0)
     pips_at_risk = abs(entry - sl)
     recommended_lots = round(risk_capital / (pips_at_risk * 10), 2) if pips_at_risk > 0 else 0.01
     
-    rc3.metric("Optimized Lot Size", f"{max(recommended_lots, 0.01)} Lots", f"Hard Risk: ${risk_capital:.2f}")
+    st.metric("Optimized Lot Size", f"{max(recommended_lots, 0.01)} Lots", f"Hard Risk: ${risk_capital:.2f}")
 
 st.markdown("---")
 
 # --- SESSIONS TRACKER ---
 st.subheader("🌍 Advanced Market Sessions & Machine Learning Predictor")
-sc1, sc2, sc3, sc4 = st.columns(4)
 
 ist_now = datetime.now(pytz.timezone('Asia/Kolkata'))
 current_hour = ist_now.hour
@@ -325,10 +318,10 @@ elif 13 <= current_hour < 21:
 elif 21 <= current_hour or current_hour < 3:
     session_status = "🟡 Asian Session (Accumulation)"
 
-sc1.metric("Active Global Session", session_status.split()[1] if len(session_status.split()) > 1 else "Active")
-sc2.metric("ML Direction Model", ml_direction)
-sc3.metric("SMC Scanner", "Active (OB & FVG)")
-sc4.metric("Risk Guardrail", "Strict (Max 1% Loss)")
+st.metric("Active Global Session", session_status.split()[1] if len(session_status.split()) > 1 else "Active")
+st.metric("ML Direction Model", ml_direction)
+st.metric("SMC Scanner", "Active (OB & FVG)")
+st.metric("Risk Guardrail", "Strict (Max 1% Loss)")
 
 st.markdown("---")
 
